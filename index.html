@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ApusFly DJI Cloud Test</title>
+</head>
+<body>
+
+<h1>ApusFly DJI Cloud Test</h1>
+
+<p>Page loaded successfully.</p>
+
+<div id="status">Checking DJI environment...</div>
+
+<script>
+if(window.djiBridge){
+    document.getElementById("status").innerHTML =
+        "DJI Bridge Detected ✔";
+}else{
+    document.getElementById("status").innerHTML =
+        "DJI Bridge Not Detected";
+}
+</script>
+
+</body>
+</html>
