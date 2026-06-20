@@ -1,49 +1,11 @@
-function log(msg){
+function log(msg) {
     document.getElementById("status").innerHTML += "<br>" + msg;
 }
 
 log("Page loaded");
 
 // ===============================
-// 🚁 TELEMETRY STREAM FUNCTION
-// ===============================
-function startTelemetryStream() {
-
-    log("🚀 Starting telemetry stream...");
-
-    setInterval(() => {
-
-        // ⚠️ TEST DATA (replace later with real DJI SDK values)
-        const telemetry = {
-            device_sn: "DJI-TEST-001",
-            latitude: 14.5547 + Math.random() * 0.001,
-            longitude: 121.0244 + Math.random() * 0.001,
-            altitude: 120,
-            speed: 5,
-            battery: Math.floor(Math.random() * 100),
-            status: "flying"
-        };
-
-        fetch("https://apus-fly.vercel.app/api/dji-telemetry", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(telemetry)
-        })
-        .then(res => res.json())
-        .then(data => {
-            log("📡 Sent telemetry ✔");
-        })
-        .catch(err => {
-            log("❌ Send failed: " + err);
-        });
-
-    }, 2000);
-}
-
-// ===============================
-// 🚁 DJI BRIDGE CHECK
+// DJI BRIDGE CHECK
 // ===============================
 if (!window.djiBridge) {
     log("❌ DJI Bridge not found");
@@ -59,10 +21,20 @@ if (!window.djiBridge) {
 
         log("License result: " + result);
 
-        // 🚀 START TELEMETRY AFTER SUCCESS
-        startTelemetryStream();
+        // Debug: show available DJI Bridge functions
+        log("Inspecting DJI Bridge...");
+        console.log("DJI BRIDGE:", window.djiBridge);
+
+        const methods = Object.keys(window.djiBridge);
+
+        log("Found " + methods.length + " bridge methods");
+
+        methods.forEach(method => {
+            console.log("DJI METHOD:", method);
+        });
 
     } catch (err) {
         log("License error: " + err);
+        console.error(err);
     }
 }
