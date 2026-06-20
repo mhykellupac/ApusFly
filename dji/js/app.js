@@ -10,14 +10,13 @@ function showResult(title, result) {
 
         log(title + ": " + output);
         console.log(title, result);
-
     } catch (e) {
         log(title + ": " + result);
         console.log(title, result);
     }
 }
 
-log("Initializing...");
+log("🚀 DJI App Starting...");
 
 if (!window.djiBridge) {
 
@@ -29,108 +28,67 @@ if (!window.djiBridge) {
 
     try {
 
-        // Verify license
-        const licenseResult = window.djiBridge.platformVerifyLicense(
+        const license = window.djiBridge.platformVerifyLicense(
             DJI_CONFIG.APP_ID,
             DJI_CONFIG.APP_KEY,
             DJI_CONFIG.LICENSE
         );
 
-        showResult("License Result", licenseResult);
+        showResult("License", license);
 
-        // Aircraft SN
-        try {
-            showResult(
-                "Aircraft SN",
-                window.djiBridge.platformGetAircraftSN()
-            );
-        } catch (e) {
-            showResult("Aircraft SN Error", e);
-        }
-
-        // RC SN
-        try {
-            showResult(
-                "RC SN",
-                window.djiBridge.platformGetRemoteControllerSN()
-            );
-        } catch (e) {
-            showResult("RC SN Error", e);
-        }
-
-        // Platform Token
-        try {
-            showResult(
-                "Platform Token",
-                window.djiBridge.platformGetToken()
-            );
-        } catch (e) {
-            showResult("Platform Token Error", e);
-        }
-
-        // API Host
-        try {
-            showResult(
-                "API Host",
-                window.djiBridge.apiGetHost()
-            );
-        } catch (e) {
-            showResult("API Host Error", e);
-        }
-
-        // Thing State
-        try {
-            showResult(
-                "Thing State",
-                window.djiBridge.thingGetConnectState()
-            );
-        } catch (e) {
-            showResult("Thing State Error", e);
-        }
-
-        // Thing Config
-        try {
-            showResult(
-                "Thing Config",
-                window.djiBridge.thingGetConfigs()
-            );
-        } catch (e) {
-            showResult("Thing Config Error", e);
-        }
-
-        // WS State
-        try {
-            showResult(
-                "WS State",
-                window.djiBridge.wsGetConnectState()
-            );
-        } catch (e) {
-            showResult("WS State Error", e);
-        }
-
-        // WS Config
-        try {
-            showResult(
-                "WS Config",
-                window.djiBridge.wsGetConfigs()
-            );
-        } catch (e) {
-            showResult("WS Config Error", e);
-        }
-
-        // Version
-        try {
-            showResult(
-                "Platform Version",
-                window.djiBridge.platformGetVersion()
-            );
-        } catch (e) {
-            showResult("Version Error", e);
-        }
+        startTelemetry();
 
     } catch (err) {
-
-        showResult("License Error", err);
-
+        showResult("Init Error", err);
     }
+}
+
+// ===============================
+// 🚁 TELEMETRY SENDER (FIXED)
+// ===============================
+function startTelemetry() {
+
+    log("📡 Starting telemetry stream...");
+
+    setInterval(() => {
+
+        try {
+
+            const payload = {
+                device_sn: window.djiBridge.platformGetAircraftSN(),
+                rc_sn: window.djiBridge.platformGetRemoteControllerSN(),
+                token: window.djiBridge.platformGetToken(),
+
+                // 🚨 ADD THESE (IMPORTANT FIX)
+                latitude: window.djiBridge.platformGetAircraftLocation?.()?.latitude || null,
+                longitude: window.djiBridge.platformGetAircraftLocation?.()?.longitude || null,
+                altitude: window.djiBridge.platformGetAircraftAltitude?.() || null,
+                battery: window.djiBridge.platformGetBatteryLevel?.() || null,
+
+                status: "flying",
+                timestamp: Date.now()
+            };
+
+            log("📤 Sending telemetry...");
+
+            fetch("https://apus-fly.vercel.app/api/dji-telemetry", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                showResult("Telemetry Response", data);
+            })
+            .catch(err => {
+                showResult("Fetch Error", err);
+            });
+
+        } catch (err) {
+            showResult("Telemetry Error", err);
+        }
+
+    }, 2000);
 }
