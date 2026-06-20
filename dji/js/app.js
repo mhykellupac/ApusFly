@@ -2,211 +2,135 @@ function log(msg) {
     document.getElementById("status").innerHTML += "<br>" + msg;
 }
 
-log("Page loaded");
+function showResult(title, result) {
+    try {
+        const output = typeof result === "string"
+            ? result
+            : JSON.stringify(result);
 
-// ===============================
-// DJI BRIDGE CHECK
-// ===============================
+        log(title + ": " + output);
+        console.log(title, result);
+
+    } catch (e) {
+        log(title + ": " + result);
+        console.log(title, result);
+    }
+}
+
+log("Initializing...");
+
 if (!window.djiBridge) {
 
     log("❌ DJI Bridge not found");
-    console.error("DJI Bridge not found");
 
 } else {
 
-    log("✔️ DJI Bridge detected");
+    log("✅ DJI Bridge detected");
 
     try {
 
-        const result = window.djiBridge.platformVerifyLicense(
+        // Verify license
+        const licenseResult = window.djiBridge.platformVerifyLicense(
             DJI_CONFIG.APP_ID,
             DJI_CONFIG.APP_KEY,
             DJI_CONFIG.LICENSE
         );
 
-        log("✔️ License result: " + JSON.stringify(result));
-        console.log("LICENSE RESULT:", result);
+        showResult("License Result", licenseResult);
 
-        // ===============================
-        // AIRCRAFT SN
-        // ===============================
+        // Aircraft SN
         try {
-
-            const aircraftSN =
-                window.djiBridge.platformGetAircraftSN();
-
-            log("🚁 Aircraft SN: " +
-                JSON.stringify(aircraftSN));
-
-            console.log("AIRCRAFT SN:", aircraftSN);
-
-        } catch (err) {
-
-            log("❌ Aircraft SN Error: " + err);
-            console.error(err);
-
+            showResult(
+                "Aircraft SN",
+                window.djiBridge.platformGetAircraftSN()
+            );
+        } catch (e) {
+            showResult("Aircraft SN Error", e);
         }
 
-        // ===============================
-        // REMOTE CONTROLLER SN
-        // ===============================
+        // RC SN
         try {
-
-            const rcSN =
-                window.djiBridge.platformGetRemoteControllerSN();
-
-            log("🎮 RC SN: " +
-                JSON.stringify(rcSN));
-
-            console.log("RC SN:", rcSN);
-
-        } catch (err) {
-
-            log("❌ RC SN Error: " + err);
-            console.error(err);
-
+            showResult(
+                "RC SN",
+                window.djiBridge.platformGetRemoteControllerSN()
+            );
+        } catch (e) {
+            showResult("RC SN Error", e);
         }
 
-        // ===============================
-        // PLATFORM TOKEN
-        // ===============================
+        // Platform Token
         try {
-
-            const token =
-                window.djiBridge.platformGetToken();
-
-            log("🔑 Platform Token Retrieved");
-
-            console.log("PLATFORM TOKEN:", token);
-
-        } catch (err) {
-
-            log("❌ Platform Token Error: " + err);
-            console.error(err);
-
+            showResult(
+                "Platform Token",
+                window.djiBridge.platformGetToken()
+            );
+        } catch (e) {
+            showResult("Platform Token Error", e);
         }
 
-        // ===============================
-        // API HOST
-        // ===============================
+        // API Host
         try {
-
-            const apiHost =
-                window.djiBridge.apiGetHost();
-
-            log("🌐 API Host: " +
-                JSON.stringify(apiHost));
-
-            console.log("API HOST:", apiHost);
-
-        } catch (err) {
-
-            log("❌ API Host Error: " + err);
-            console.error(err);
-
+            showResult(
+                "API Host",
+                window.djiBridge.apiGetHost()
+            );
+        } catch (e) {
+            showResult("API Host Error", e);
         }
 
-        // ===============================
-        // THING STATE
-        // ===============================
+        // Thing State
         try {
-
-            const thingState =
-                window.djiBridge.thingGetConnectState();
-
-            log("📡 Thing State: " +
-                JSON.stringify(thingState));
-
-            console.log("THING STATE:", thingState);
-
-        } catch (err) {
-
-            log("❌ Thing State Error: " + err);
-            console.error(err);
-
+            showResult(
+                "Thing State",
+                window.djiBridge.thingGetConnectState()
+            );
+        } catch (e) {
+            showResult("Thing State Error", e);
         }
 
-        // ===============================
-        // THING CONFIG
-        // ===============================
+        // Thing Config
         try {
-
-            const thingConfig =
-                window.djiBridge.thingGetConfigs();
-
-            log("📄 Thing Config Retrieved");
-
-            console.log("THING CONFIG:", thingConfig);
-
-        } catch (err) {
-
-            log("❌ Thing Config Error: " + err);
-            console.error(err);
-
+            showResult(
+                "Thing Config",
+                window.djiBridge.thingGetConfigs()
+            );
+        } catch (e) {
+            showResult("Thing Config Error", e);
         }
 
-        // ===============================
-        // WS STATE
-        // ===============================
+        // WS State
         try {
-
-            const wsState =
-                window.djiBridge.wsGetConnectState();
-
-            log("🔌 WS State: " +
-                JSON.stringify(wsState));
-
-            console.log("WS STATE:", wsState);
-
-        } catch (err) {
-
-            log("❌ WS State Error: " + err);
-            console.error(err);
-
+            showResult(
+                "WS State",
+                window.djiBridge.wsGetConnectState()
+            );
+        } catch (e) {
+            showResult("WS State Error", e);
         }
 
-        // ===============================
-        // WS CONFIG
-        // ===============================
+        // WS Config
         try {
-
-            const wsConfig =
-                window.djiBridge.wsGetConfigs();
-
-            log("📄 WS Config Retrieved");
-
-            console.log("WS CONFIG:", wsConfig);
-
-        } catch (err) {
-
-            log("❌ WS Config Error: " + err);
-            console.error(err);
-
+            showResult(
+                "WS Config",
+                window.djiBridge.wsGetConfigs()
+            );
+        } catch (e) {
+            showResult("WS Config Error", e);
         }
 
-        // ===============================
-        // PLATFORM VERSION
-        // ===============================
+        // Version
         try {
-
-            const version =
-                window.djiBridge.platformGetVersion();
-
-            log("📦 Platform Version Retrieved");
-
-            console.log("PLATFORM VERSION:", version);
-
-        } catch (err) {
-
-            log("❌ Version Error: " + err);
-            console.error(err);
-
+            showResult(
+                "Platform Version",
+                window.djiBridge.platformGetVersion()
+            );
+        } catch (e) {
+            showResult("Version Error", e);
         }
 
     } catch (err) {
 
-        log("❌ License Error: " + err);
-        console.error(err);
+        showResult("License Error", err);
 
     }
 }
