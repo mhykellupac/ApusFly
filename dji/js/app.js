@@ -14,7 +14,7 @@ if (!window.djiBridge) {
 
 } else {
 
-    log("✔ DJI Bridge detected");
+    log("✔️ DJI Bridge detected");
 
     try {
 
@@ -24,18 +24,17 @@ if (!window.djiBridge) {
             DJI_CONFIG.LICENSE
         );
 
-        log("License result: " + JSON.stringify(result));
+        log("✔️ License result: " + JSON.stringify(result));
+        console.log("LICENSE RESULT:", result);
 
         // ===============================
         // BRIDGE METHODS
         // ===============================
         const methods = Object.keys(window.djiBridge);
 
-        log("✅ Found " + methods.length + " bridge methods");
+        log("✔️ Found " + methods.length + " bridge methods");
 
-        methods.forEach((method) => {
-            console.log("DJI METHOD:", method);
-        });
+        console.log("DJI METHODS:", methods);
 
         // ===============================
         // AIRCRAFT SN
@@ -45,92 +44,155 @@ if (!window.djiBridge) {
             const aircraftSN =
                 window.djiBridge.platformGetAircraftSN();
 
-            log("🚁 Aircraft SN: " + JSON.stringify(aircraftSN));
+            log("🚁 Aircraft SN: " +
+                JSON.stringify(aircraftSN));
 
-            console.log("AIRCRAFT SN:", aircraftSN);
+            console.log(
+                "AIRCRAFT SN:",
+                aircraftSN
+            );
 
         } catch (err) {
 
-            log("❌ Aircraft SN Error");
+            log("❌ Aircraft SN Error: " + err);
             console.error(err);
 
         }
 
         // ===============================
-        // LOAD THING COMPONENT
+        // API HOST
         // ===============================
         try {
 
-            log("🔄 Loading Thing Component...");
+            const apiHost =
+                window.djiBridge.apiGetHost();
 
-            const loadThingResult =
-                window.djiBridge.platformLoadComponent("thing");
-
-            log("Thing Load Result: " +
-                JSON.stringify(loadThingResult));
+            log("🌐 API Host: " +
+                JSON.stringify(apiHost));
 
             console.log(
-                "THING LOAD RESULT:",
-                loadThingResult
+                "API HOST:",
+                apiHost
             );
 
         } catch (err) {
 
-            log("❌ Thing Load Error: " + err);
-            console.error("THING LOAD ERROR:", err);
+            log("❌ API Host Error: " + err);
+            console.error(err);
 
         }
 
         // ===============================
-        // CHECK THING STATUS AFTER LOAD
+        // API TOKEN
         // ===============================
-        setTimeout(() => {
+        try {
 
-            try {
+            const token =
+                window.djiBridge.apiGetToken();
 
-                const thingState =
-                    window.djiBridge.thingGetConnectState();
+            log("🔑 API Token Result Received");
 
-                log(
-                    "📡 Thing State After Load: " +
-                    JSON.stringify(thingState)
-                );
+            console.log(
+                "API TOKEN:",
+                token
+            );
 
-                console.log(
-                    "THING STATE AFTER LOAD:",
-                    thingState
-                );
+        } catch (err) {
 
-            } catch (err) {
+            log("❌ API Token Error: " + err);
+            console.error(err);
 
-                log("❌ Thing State Error: " + err);
-                console.error(err);
+        }
 
-            }
+        // ===============================
+        // THING STATE
+        // ===============================
+        try {
 
-            try {
+            const thingState =
+                window.djiBridge.thingGetConnectState();
 
-                const thingConfig =
-                    window.djiBridge.thingGetConfigs();
+            log("📡 Thing State: " +
+                JSON.stringify(thingState));
 
-                log(
-                    "📋 Thing Config After Load: " +
-                    JSON.stringify(thingConfig)
-                );
+            console.log(
+                "THING STATE:",
+                thingState
+            );
 
-                console.log(
-                    "THING CONFIG AFTER LOAD:",
-                    thingConfig
-                );
+        } catch (err) {
 
-            } catch (err) {
+            log("❌ Thing State Error: " + err);
+            console.error(err);
 
-                log("❌ Thing Config Error: " + err);
-                console.error(err);
+        }
 
-            }
+        // ===============================
+        // THING CONFIG
+        // ===============================
+        try {
 
-        }, 3000);
+            const thingConfig =
+                window.djiBridge.thingGetConfigs();
+
+            log("📄 Thing Config Retrieved");
+
+            console.log(
+                "THING CONFIG:",
+                thingConfig
+            );
+
+        } catch (err) {
+
+            log("❌ Thing Config Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // WS STATE
+        // ===============================
+        try {
+
+            const wsState =
+                window.djiBridge.wsGetConnectState();
+
+            log("🔌 WS State: " +
+                JSON.stringify(wsState));
+
+            console.log(
+                "WS STATE:",
+                wsState
+            );
+
+        } catch (err) {
+
+            log("❌ WS State Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // WS CONFIG
+        // ===============================
+        try {
+
+            const wsConfig =
+                window.djiBridge.wsGetConfigs();
+
+            log("📄 WS Config Retrieved");
+
+            console.log(
+                "WS CONFIG:",
+                wsConfig
+            );
+
+        } catch (err) {
+
+            log("❌ WS Config Error: " + err);
+            console.error(err);
+
+        }
 
         // ===============================
         // PLATFORM VERSION
@@ -140,15 +202,16 @@ if (!window.djiBridge) {
             const version =
                 window.djiBridge.platformGetVersion();
 
-            log(
-                "📦 Platform Version: " +
-                JSON.stringify(version)
-            );
+            log("📦 Platform Version Retrieved");
 
-            console.log("PLATFORM VERSION:", version);
+            console.log(
+                "PLATFORM VERSION:",
+                version
+            );
 
         } catch (err) {
 
+            log("❌ Version Error: " + err);
             console.error(err);
 
         }
