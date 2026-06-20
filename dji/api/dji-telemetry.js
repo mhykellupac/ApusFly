@@ -1,74 +1,30 @@
 export default async function handler(req, res) {
+
     if (req.method !== "POST") {
         return res.status(405).json({ message: "POST only" });
     }
 
     try {
+
         const data = req.body;
 
-        // =========================
-        // 🧪 FULL DEBUG LOGGING
-        // =========================
         console.log("===== DJI TELEMETRY RECEIVED =====");
-        console.log("RAW DATA:", JSON.stringify(data, null, 2));
-        console.log("LAT:", data?.latitude);
-        console.log("LNG:", data?.longitude);
-        console.log("DEVICE:", data?.device_sn);
-        console.log("ALT:", data?.altitude);
-        console.log("BATTERY:", data?.battery);
-        console.log("TIME:", new Date().toISOString());
-        console.log("===================================");
+        console.log(JSON.stringify(data, null, 2));
 
-        // =========================
-        // 🚨 BASIC VALIDATION
-        // =========================
         if (!data || typeof data !== "object") {
-            throw new Error("Invalid telemetry payload");
+            throw new Error("Invalid payload");
         }
 
-        const lat = parseFloat(data.latitude);
-        const lng = parseFloat(data.longitude);
-
-        // Detect invalid GPS
-        const isValidGPS =
-            !isNaN(lat) &&
-            !isNaN(lng) &&
-            lat !== 0 &&
-            lng !== 0 &&
-            lat >= -90 &&
-            lat <= 90 &&
-            lng >= -180 &&
-            lng <= 180;
-
-        if (!isValidGPS) {
-            console.warn("⚠️ INVALID GPS DETECTED:", { lat, lng });
-
-            return res.status(200).json({
-                success: false,
-                message: "Invalid GPS data received",
-                raw: data
-            });
-        }
-
-        // =========================
-        // 📦 CLEAN PAYLOAD
-        // =========================
+        // IMPORTANT: we no longer depend on GPS (because DJI is not sending it yet)
         const payload = {
-            drone_id: data.device_sn || data.drone_id || "unknown",
-            lat,
-            lng,
-            altitude: data.altitude ?? null,
-            speed: data.speed ?? null,
-            battery: data.battery ?? null,
-            status: data.status || "flying",
+            drone_id: data.drone_id || "unknown",
+            rc_sn: data.rc_sn || null,
+            status: "active",
             timestamp: Date.now()
         };
 
         console.log("CLEAN PAYLOAD:", payload);
 
-        // =========================
-        // 🚀 FORWARD TO MQTT
-        // =========================
         const response = await fetch(
             "https://apusfly-mqtt-bridge.onrender.com/publish",
             {
@@ -82,27 +38,22 @@ export default async function handler(req, res) {
         );
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error("MQTT bridge error:", errorText);
-
+            const errText = await response.text();
             return res.status(500).json({
                 success: false,
-                message: "MQTT bridge failed",
-                error: errorText
+                error: errText
             });
         }
 
-        // =========================
-        // ✅ SUCCESS RESPONSE
-        // =========================
         return res.status(200).json({
             success: true,
-            message: "Telemetry forwarded to MQTT",
+            message: "Forwarded to MQTT",
             payload
         });
 
     } catch (err) {
-        console.error("DJI TELEMETRY ERROR:", err);
+
+        console.error(err);
 
         return res.status(500).json({
             success: false,

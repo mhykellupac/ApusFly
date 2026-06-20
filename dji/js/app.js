@@ -1,51 +1,92 @@
 function log(msg) {
-    document.getElementById("status").innerHTML += "<br>" + msg;
-}
-
-function showResult(title, result) {
-    try {
-        const output = typeof result === "string"
-            ? result
-            : JSON.stringify(result);
-
-        log(title + ": " + output);
-        console.log(title, result);
-    } catch (e) {
-        log(title + ": " + result);
-        console.log(title, result);
-    }
+    const el = document.getElementById("status");
+    if (el) el.innerHTML += "<br>" + msg;
+    console.log(msg);
 }
 
 log("🚀 DJI App Starting...");
 
 if (!window.djiBridge) {
-
     log("❌ DJI Bridge not found");
-
 } else {
-
     log("✅ DJI Bridge detected");
 
     try {
-
+        // =========================
+        // LICENSE CHECK
+        // =========================
         const license = window.djiBridge.platformVerifyLicense(
             DJI_CONFIG.APP_ID,
             DJI_CONFIG.APP_KEY,
             DJI_CONFIG.LICENSE
         );
 
-        showResult("License", license);
+        log("✔ License verified");
+        console.log("License:", license);
 
-        startTelemetry();
+        // =========================
+        // START DJI CLOUD INIT
+        // =========================
+        initThing();
 
     } catch (err) {
-        showResult("Init Error", err);
+        log("❌ Init error: " + err);
     }
 }
 
-// ===============================
-// 🚁 TELEMETRY SENDER (FIXED)
-// ===============================
+// =========================
+// 🚁 THING MODULE (REQUIRED)
+// =========================
+function initThing() {
+
+    log("📡 Loading Thing module...");
+
+    window.djiBridge.platformLoadComponent(
+        "thing",
+        JSON.stringify({
+            host: "tcp://broker.hivemq.com:1883",
+            clientId: "apusfly_" + Date.now()
+        })
+    );
+
+    setTimeout(() => {
+
+        const state = window.djiBridge.thingGetConnectState();
+        log("📡 Thing state: " + JSON.stringify(state));
+
+        initWS();
+
+    }, 3000);
+}
+
+// =========================
+// 🔌 WS MODULE (REQUIRED)
+// =========================
+function initWS() {
+
+    log("🔌 Loading WS module...");
+
+    window.djiBridge.platformLoadComponent(
+        "ws",
+        JSON.stringify({
+            url: "wss://apus-fly.vercel.app/ws",
+            token: window.djiBridge.platformGetToken()
+        })
+    );
+
+    setTimeout(() => {
+
+        const state = window.djiBridge.wsGetConnectState();
+        log("🔌 WS state: " + JSON.stringify(state));
+
+        startTelemetry();
+
+    }, 3000);
+}
+
+// =========================
+// 📡 TELEMETRY SENDER
+// =========================
 function startTelemetry() {
 
     log("📡 Starting telemetry stream...");
@@ -55,17 +96,14 @@ function startTelemetry() {
         try {
 
             const payload = {
-                device_sn: window.djiBridge.platformGetAircraftSN(),
+                drone_id: window.djiBridge.platformGetAircraftSN(),
                 rc_sn: window.djiBridge.platformGetRemoteControllerSN(),
                 token: window.djiBridge.platformGetToken(),
 
-                // 🚨 ADD THESE (IMPORTANT FIX)
-                latitude: window.djiBridge.platformGetAircraftLocation?.()?.latitude || null,
-                longitude: window.djiBridge.platformGetAircraftLocation?.()?.longitude || null,
-                altitude: window.djiBridge.platformGetAircraftAltitude?.() || null,
-                battery: window.djiBridge.platformGetBatteryLevel?.() || null,
+                thing_state: window.djiBridge.thingGetConnectState(),
+                ws_state: window.djiBridge.wsGetConnectState(),
 
-                status: "flying",
+                api_host: window.djiBridge.apiGetHost(),
                 timestamp: Date.now()
             };
 
@@ -78,17 +116,17 @@ function startTelemetry() {
                 },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
+            .then(r => r.json())
             .then(data => {
-                showResult("Telemetry Response", data);
+                log("✔ Sent: " + JSON.stringify(data));
             })
             .catch(err => {
-                showResult("Fetch Error", err);
+                log("❌ Send error: " + err);
             });
 
         } catch (err) {
-            showResult("Telemetry Error", err);
+            log("❌ Telemetry error: " + err);
         }
 
-    }, 2000);
+    }, 3000);
 }
