@@ -1,112 +1,212 @@
-export default async function handler(req, res) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ message: "POST only" });
-    }
+function log(msg) {
+    document.getElementById("status").innerHTML += "<br>" + msg;
+}
+
+log("Page loaded");
+
+// ===============================
+// DJI BRIDGE CHECK
+// ===============================
+if (!window.djiBridge) {
+
+    log("❌ DJI Bridge not found");
+    console.error("DJI Bridge not found");
+
+} else {
+
+    log("✔️ DJI Bridge detected");
 
     try {
-        const data = req.body;
 
-        // =========================
-        // 🧪 FULL DEBUG LOGGING
-        // =========================
-        console.log("===== DJI TELEMETRY RECEIVED =====");
-        console.log("RAW DATA:", JSON.stringify(data, null, 2));
-        console.log("LAT:", data?.latitude);
-        console.log("LNG:", data?.longitude);
-        console.log("DEVICE:", data?.device_sn);
-        console.log("ALT:", data?.altitude);
-        console.log("BATTERY:", data?.battery);
-        console.log("TIME:", new Date().toISOString());
-        console.log("===================================");
-
-        // =========================
-        // 🚨 BASIC VALIDATION
-        // =========================
-        if (!data || typeof data !== "object") {
-            throw new Error("Invalid telemetry payload");
-        }
-
-        const lat = parseFloat(data.latitude);
-        const lng = parseFloat(data.longitude);
-
-        // Detect invalid GPS
-        const isValidGPS =
-            !isNaN(lat) &&
-            !isNaN(lng) &&
-            lat !== 0 &&
-            lng !== 0 &&
-            lat >= -90 &&
-            lat <= 90 &&
-            lng >= -180 &&
-            lng <= 180;
-
-        if (!isValidGPS) {
-            console.warn("⚠️ INVALID GPS DETECTED:", { lat, lng });
-
-            return res.status(200).json({
-                success: false,
-                message: "Invalid GPS data received",
-                raw: data
-            });
-        }
-
-        // =========================
-        // 📦 CLEAN PAYLOAD
-        // =========================
-        const payload = {
-            drone_id: data.device_sn || data.drone_id || "unknown",
-            lat,
-            lng,
-            altitude: data.altitude ?? null,
-            speed: data.speed ?? null,
-            battery: data.battery ?? null,
-            status: data.status || "flying",
-            timestamp: Date.now()
-        };
-
-        console.log("CLEAN PAYLOAD:", payload);
-
-        // =========================
-        // 🚀 FORWARD TO MQTT
-        // =========================
-        const response = await fetch(
-            "https://apusfly-mqtt-bridge.onrender.com/publish",
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    topic: "apusfly/drone/telemetry",
-                    message: JSON.stringify(payload)
-                })
-            }
+        const result = window.djiBridge.platformVerifyLicense(
+            DJI_CONFIG.APP_ID,
+            DJI_CONFIG.APP_KEY,
+            DJI_CONFIG.LICENSE
         );
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("MQTT bridge error:", errorText);
+        log("✔️ License result: " + JSON.stringify(result));
+        console.log("LICENSE RESULT:", result);
 
-            return res.status(500).json({
-                success: false,
-                message: "MQTT bridge failed",
-                error: errorText
-            });
+        // ===============================
+        // AIRCRAFT SN
+        // ===============================
+        try {
+
+            const aircraftSN =
+                window.djiBridge.platformGetAircraftSN();
+
+            log("🚁 Aircraft SN: " +
+                JSON.stringify(aircraftSN));
+
+            console.log("AIRCRAFT SN:", aircraftSN);
+
+        } catch (err) {
+
+            log("❌ Aircraft SN Error: " + err);
+            console.error(err);
+
         }
 
-        // =========================
-        // ✅ SUCCESS RESPONSE
-        // =========================
-        return res.status(200).json({
-            success: true,
-            message: "Telemetry forwarded to MQTT",
-            payload
-        });
+        // ===============================
+        // REMOTE CONTROLLER SN
+        // ===============================
+        try {
+
+            const rcSN =
+                window.djiBridge.platformGetRemoteControllerSN();
+
+            log("🎮 RC SN: " +
+                JSON.stringify(rcSN));
+
+            console.log("RC SN:", rcSN);
+
+        } catch (err) {
+
+            log("❌ RC SN Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // PLATFORM TOKEN
+        // ===============================
+        try {
+
+            const token =
+                window.djiBridge.platformGetToken();
+
+            log("🔑 Platform Token Retrieved");
+
+            console.log("PLATFORM TOKEN:", token);
+
+        } catch (err) {
+
+            log("❌ Platform Token Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // API HOST
+        // ===============================
+        try {
+
+            const apiHost =
+                window.djiBridge.apiGetHost();
+
+            log("🌐 API Host: " +
+                JSON.stringify(apiHost));
+
+            console.log("API HOST:", apiHost);
+
+        } catch (err) {
+
+            log("❌ API Host Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // THING STATE
+        // ===============================
+        try {
+
+            const thingState =
+                window.djiBridge.thingGetConnectState();
+
+            log("📡 Thing State: " +
+                JSON.stringify(thingState));
+
+            console.log("THING STATE:", thingState);
+
+        } catch (err) {
+
+            log("❌ Thing State Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // THING CONFIG
+        // ===============================
+        try {
+
+            const thingConfig =
+                window.djiBridge.thingGetConfigs();
+
+            log("📄 Thing Config Retrieved");
+
+            console.log("THING CONFIG:", thingConfig);
+
+        } catch (err) {
+
+            log("❌ Thing Config Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // WS STATE
+        // ===============================
+        try {
+
+            const wsState =
+                window.djiBridge.wsGetConnectState();
+
+            log("🔌 WS State: " +
+                JSON.stringify(wsState));
+
+            console.log("WS STATE:", wsState);
+
+        } catch (err) {
+
+            log("❌ WS State Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // WS CONFIG
+        // ===============================
+        try {
+
+            const wsConfig =
+                window.djiBridge.wsGetConfigs();
+
+            log("📄 WS Config Retrieved");
+
+            console.log("WS CONFIG:", wsConfig);
+
+        } catch (err) {
+
+            log("❌ WS Config Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // PLATFORM VERSION
+        // ===============================
+        try {
+
+            const version =
+                window.djiBridge.platformGetVersion();
+
+            log("📦 Platform Version Retrieved");
+
+            console.log("PLATFORM VERSION:", version);
+
+        } catch (err) {
+
+            log("❌ Version Error: " + err);
+            console.error(err);
+
+        }
 
     } catch (err) {
-        console.error("DJI TELEMETRY ERROR:", err);
 
-        return res.status(500).json({
-            success: false,
-            error: err.message
-        });
+        log("❌ License Error: " + err);
+        console.error(err);
+
     }
 }

@@ -28,15 +28,6 @@ if (!window.djiBridge) {
         console.log("LICENSE RESULT:", result);
 
         // ===============================
-        // BRIDGE METHODS
-        // ===============================
-        const methods = Object.keys(window.djiBridge);
-
-        log("✔️ Found " + methods.length + " bridge methods");
-
-        console.log("DJI METHODS:", methods);
-
-        // ===============================
         // AIRCRAFT SN
         // ===============================
         try {
@@ -47,14 +38,50 @@ if (!window.djiBridge) {
             log("🚁 Aircraft SN: " +
                 JSON.stringify(aircraftSN));
 
-            console.log(
-                "AIRCRAFT SN:",
-                aircraftSN
-            );
+            console.log("AIRCRAFT SN:", aircraftSN);
 
         } catch (err) {
 
             log("❌ Aircraft SN Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // REMOTE CONTROLLER SN
+        // ===============================
+        try {
+
+            const rcSN =
+                window.djiBridge.platformGetRemoteControllerSN();
+
+            log("🎮 RC SN: " +
+                JSON.stringify(rcSN));
+
+            console.log("RC SN:", rcSN);
+
+        } catch (err) {
+
+            log("❌ RC SN Error: " + err);
+            console.error(err);
+
+        }
+
+        // ===============================
+        // PLATFORM TOKEN
+        // ===============================
+        try {
+
+            const token =
+                window.djiBridge.platformGetToken();
+
+            log("🔑 Platform Token Retrieved");
+
+            console.log("PLATFORM TOKEN:", token);
+
+        } catch (err) {
+
+            log("❌ Platform Token Error: " + err);
             console.error(err);
 
         }
@@ -70,36 +97,11 @@ if (!window.djiBridge) {
             log("🌐 API Host: " +
                 JSON.stringify(apiHost));
 
-            console.log(
-                "API HOST:",
-                apiHost
-            );
+            console.log("API HOST:", apiHost);
 
         } catch (err) {
 
             log("❌ API Host Error: " + err);
-            console.error(err);
-
-        }
-
-        // ===============================
-        // API TOKEN
-        // ===============================
-        try {
-
-            const token =
-                window.djiBridge.apiGetToken();
-
-            log("🔑 API Token Result Received");
-
-            console.log(
-                "API TOKEN:",
-                token
-            );
-
-        } catch (err) {
-
-            log("❌ API Token Error: " + err);
             console.error(err);
 
         }
@@ -115,10 +117,7 @@ if (!window.djiBridge) {
             log("📡 Thing State: " +
                 JSON.stringify(thingState));
 
-            console.log(
-                "THING STATE:",
-                thingState
-            );
+            console.log("THING STATE:", thingState);
 
         } catch (err) {
 
@@ -137,10 +136,7 @@ if (!window.djiBridge) {
 
             log("📄 Thing Config Retrieved");
 
-            console.log(
-                "THING CONFIG:",
-                thingConfig
-            );
+            console.log("THING CONFIG:", thingConfig);
 
         } catch (err) {
 
@@ -160,10 +156,7 @@ if (!window.djiBridge) {
             log("🔌 WS State: " +
                 JSON.stringify(wsState));
 
-            console.log(
-                "WS STATE:",
-                wsState
-            );
+            console.log("WS STATE:", wsState);
 
         } catch (err) {
 
@@ -182,10 +175,7 @@ if (!window.djiBridge) {
 
             log("📄 WS Config Retrieved");
 
-            console.log(
-                "WS CONFIG:",
-                wsConfig
-            );
+            console.log("WS CONFIG:", wsConfig);
 
         } catch (err) {
 
@@ -204,10 +194,7 @@ if (!window.djiBridge) {
 
             log("📦 Platform Version Retrieved");
 
-            console.log(
-                "PLATFORM VERSION:",
-                version
-            );
+            console.log("PLATFORM VERSION:", version);
 
         } catch (err) {
 
@@ -218,7 +205,7 @@ if (!window.djiBridge) {
 
     } catch (err) {
 
-        log("❌ License error: " + err);
+        log("❌ License Error: " + err);
         console.error(err);
 
     }
