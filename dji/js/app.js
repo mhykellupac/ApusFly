@@ -1,6 +1,9 @@
 function log(msg) {
     const el = document.getElementById("status");
-    if (el) el.innerHTML += "<br>" + msg;
+    if (el) {
+        el.innerHTML += "<br>" + msg;
+    }
+
     console.log(msg);
 }
 
@@ -23,111 +26,167 @@ if (!window.djiBridge) {
         );
 
         log("✔ License verified");
-        console.log("License:", license);
+        console.log("LICENSE:", license);
+
+        // =========================
+        // TOKEN
+        // =========================
+        try {
+
+            const token =
+                window.djiBridge.platformGetToken();
+
+            log("🔑 Token Retrieved");
+
+            console.log("TOKEN:", token);
+
+        } catch (err) {
+
+            log("❌ Token Error: " + err);
+
+        }
+
+        // =========================
+        // API HOST
+        // =========================
+        try {
+
+            const host =
+                window.djiBridge.apiGetHost();
+
+            log("🌐 API Host Retrieved");
+
+            console.log("API HOST:", host);
+
+        } catch (err) {
+
+            log("❌ API Host Error: " + err);
+
+        }
 
         initThing();
 
     } catch (err) {
 
         log("❌ Init error: " + err);
+        console.error(err);
 
     }
 }
 
 // =========================
-// 🚁 THING MODULE
+// 🚁 THING MODULE DEBUG
 // =========================
 function initThing() {
 
-    log("📡 Loading Thing module...");
+    log("📡 Checking Thing module...");
 
     try {
 
-        window.djiBridge.platformLoadComponent(
-            "thing",
-            JSON.stringify({
-                host: "tcp://broker.hivemq.com:1883",
-                clientId: "apusfly_" + Date.now()
-            })
-        );
+        const thingConfig =
+            window.djiBridge.thingGetConfigs();
+
+        console.log("THING CONFIG:", thingConfig);
+
+        log("📄 Thing Config:");
+        log(JSON.stringify(thingConfig));
 
     } catch (err) {
 
-        log("❌ Thing load error: " + err);
+        log("❌ Thing Config Error: " + err);
 
     }
 
-    setTimeout(() => {
+    try {
 
-        try {
+        const thingState =
+            window.djiBridge.thingGetConnectState();
 
-            const state =
-                window.djiBridge.thingGetConnectState();
+        console.log("THING STATE:", thingState);
 
-            log("📡 Thing state: " +
-                JSON.stringify(state));
+        log("📡 Thing State:");
+        log(JSON.stringify(thingState));
 
-            console.log("THING RAW:", state);
+    } catch (err) {
 
-        } catch (err) {
+        log("❌ Thing State Error: " + err);
 
-            log("❌ Thing state error: " + err);
+    }
 
-        }
-
-        initWS();
-
-    }, 3000);
+    initWS();
 }
 
 // =========================
-// 🔌 WS MODULE
+// 🔌 WS MODULE DEBUG
 // =========================
 function initWS() {
 
-    log("🔌 Loading WS module...");
+    log("🔌 Checking WS module...");
 
     try {
 
-        window.djiBridge.platformLoadComponent(
-            "ws",
-            JSON.stringify({
-                url: "wss://apus-fly.vercel.app/ws",
-                token: window.djiBridge.platformGetToken()
-            })
-        );
+        const wsConfig =
+            window.djiBridge.wsGetConfigs();
+
+        console.log("WS CONFIG:", wsConfig);
+
+        log("📄 WS Config:");
+        log(JSON.stringify(wsConfig));
 
     } catch (err) {
 
-        log("❌ WS load error: " + err);
+        log("❌ WS Config Error: " + err);
 
     }
 
-    setTimeout(() => {
+    try {
 
-        try {
+        const wsState =
+            window.djiBridge.wsGetConnectState();
 
-            const state =
-                window.djiBridge.wsGetConnectState();
+        console.log("WS STATE:", wsState);
 
-            log("🔌 WS state: " +
-                JSON.stringify(state));
+        log("🔌 WS State:");
+        log(JSON.stringify(wsState));
 
-            console.log("WS RAW:", state);
+    } catch (err) {
 
-        } catch (err) {
+        log("❌ WS State Error: " + err);
 
-            log("❌ WS state error: " + err);
+    }
 
-        }
-
-        startTelemetry();
-
-    }, 3000);
+    startTelemetry();
 }
 
 // =========================
-// 📡 TELEMETRY SENDER
+// SERIAL NUMBER PARSER
+// =========================
+function extractData(raw) {
+
+    try {
+
+        if (typeof raw === "string") {
+
+            const parsed = JSON.parse(raw);
+
+            return parsed.data || raw;
+        }
+
+        if (raw && raw.data) {
+            return raw.data;
+        }
+
+        return raw;
+
+    } catch (err) {
+
+        return raw;
+
+    }
+}
+
+// =========================
+// TELEMETRY LOOP
 // =========================
 function startTelemetry() {
 
@@ -143,48 +202,22 @@ function startTelemetry() {
             const rcRaw =
                 window.djiBridge.platformGetRemoteControllerSN();
 
+            const aircraftSN =
+                extractData(aircraftRaw);
+
+            const rcSN =
+                extractData(rcRaw);
+
             console.log("AIRCRAFT RAW:", aircraftRaw);
             console.log("RC RAW:", rcRaw);
 
-            log("🚁 Aircraft RAW: " +
-                JSON.stringify(aircraftRaw));
-
-            log("🎮 RC RAW: " +
-                JSON.stringify(rcRaw));
-
-            // Handle both object and JSON-string responses
-            let aircraftSN = aircraftRaw;
-            let rcSN = rcRaw;
-
-            try {
-
-                if (typeof aircraftRaw === "string") {
-                    const parsed = JSON.parse(aircraftRaw);
-                    aircraftSN = parsed.data || aircraftRaw;
-                } else if (aircraftRaw?.data) {
-                    aircraftSN = aircraftRaw.data;
-                }
-
-                if (typeof rcRaw === "string") {
-                    const parsed = JSON.parse(rcRaw);
-                    rcSN = parsed.data || rcRaw;
-                } else if (rcRaw?.data) {
-                    rcSN = rcRaw.data;
-                }
-
-            } catch (e) {
-
-                console.log("Parse error:", e);
-
-            }
+            console.log("AIRCRAFT SN:", aircraftSN);
+            console.log("RC SN:", rcSN);
 
             const payload = {
 
                 drone_id: aircraftSN,
                 rc_sn: rcSN,
-
-                token:
-                    window.djiBridge.platformGetToken(),
 
                 thing_state:
                     window.djiBridge.thingGetConnectState(),
@@ -192,15 +225,10 @@ function startTelemetry() {
                 ws_state:
                     window.djiBridge.wsGetConnectState(),
 
-                api_host:
-                    window.djiBridge.apiGetHost(),
-
                 timestamp: Date.now()
             };
 
             console.log("FINAL PAYLOAD:", payload);
-
-            log("📤 Sending telemetry...");
 
             fetch(
                 "https://apus-fly.vercel.app/api/dji-telemetry",
@@ -217,19 +245,17 @@ function startTelemetry() {
 
                 console.log("API RESPONSE:", data);
 
-                log("✔ Sent: " +
-                    JSON.stringify(data));
-
             })
             .catch(err => {
 
-                log("❌ Send error: " + err);
+                console.error("SEND ERROR:", err);
 
             });
 
         } catch (err) {
 
-            log("❌ Telemetry error: " + err);
+            log("❌ Telemetry Error: " + err);
+            console.error(err);
 
         }
 
